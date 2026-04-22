@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Registration | Paramount School</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { --gold: #c5a059; --navy: #030a1a; }
+        body { 
+            background: radial-gradient(circle at center, #1e293b 0%, #030a1a 100%);
+            color: white; font-family: 'Montserrat', sans-serif;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .reg-card {
+            width: 100%; max-width: 550px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 20px; padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        }
+
+        h2 { font-family: 'Cinzel', serif; color: var(--gold); text-align: center; margin-bottom: 10px; letter-spacing: 2px; }
+        .subtitle { text-align: center; font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 30px; opacity: 0.7; text-transform: uppercase; }
+
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 8px; }
+        
+        input, select, textarea {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(197, 160, 89, 0.2);
+            padding: 12px; border-radius: 8px; color: white; outline: none; font-family: inherit;
+        }
+        input:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); }
+
+        /* Dynamic Teacher Card */
+        #assignmentPreview {
+            display: none; background: linear-gradient(45deg, rgba(197, 160, 89, 0.1), transparent);
+            border: 1px solid rgba(197, 160, 89, 0.3); padding: 20px; margin-bottom: 25px; border-radius: 12px;
+            animation: slideUp 0.5s ease;
+        }
+
+        .submit-btn {
+            width: 100%; padding: 16px; background: var(--gold); border: none; border-radius: 50px;
+            color: var(--navy); font-weight: 700; cursor: pointer; transition: 0.4s; letter-spacing: 2px; margin-top: 10px;
+        }
+        .submit-btn:hover { background: white; box-shadow: 0 0 20px rgba(197, 160, 89, 0.4); }
+
+        #adminLink {
+            display: none; position: fixed; bottom: 20px; right: 20px;
+            background: rgba(255,255,255,0.1); color: white; padding: 10px 20px;
+            border-radius: 50px; text-decoration: none; font-size: 0.7rem; border: 1px solid var(--gold);
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="reg-card" id="mainContainer">
+        <h2>Event Registration</h2>
+        <p class="subtitle">Paramount English Medium School</p>
+        
+        <form id="registrationForm">
+            <div class="input-group">
+                <label>Parent Name</label>
+                <input type="text" id="parentName" required placeholder="Enter full name">
+            </div>
+
+            <div class="input-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phone" required placeholder="Enter mobile number">
+            </div>
+
+            <div class="input-group">
+                <label>Select Primary Class</label>
+                <select id="childClass" onchange="updateTeacherDetails()" required>
+                    <option value="" disabled selected>Select Class</option>
+                    <option value="Pre-KG">Pre-KG</option>
+                    <option value="LKG">LKG</option>
+                    <option value="UKG">UKG</option>
+                    <option value="Grade 1">Grade 1</option>
+                    <option value="Grade 2">Grade 2</option>
+                    <option value="Grade 3">Grade 3</option>
+                    <option value="Grade 4">Grade 4</option>
+                    <option value="Grade 5">Grade 5</option>
+                    <option value="Grade 6">Grade 6</option>
+                    <option value="Grade 7">Grade 7</option>
+                    <option value="Grade 8">Grade 8</option>
+                </select>
+            </div>
+
+            <div id="assignmentPreview">
+                <p style="font-size: 0.6rem; color: var(--gold); margin-bottom: 8px; font-weight: bold;">DIRECTED TO:</p>
+                <div id="teacherInfo"></div>
+            </div>
+
+            <div class="input-group">
+                <label>Children Names & Grades</label>
+                <textarea id="childrenDetails" rows="2" placeholder="Ex: Rahul (Grade 5), Sneha (Grade 2)" required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">CONFIRM REGISTRATION</button>
+        </form>
+    </div>
+
+    <a href="admin-panel.html" id="adminLink"><i class="fas fa-user-shield"></i> VIEW GUEST LIST</a>
+
+    <script>
+        // Your Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRYk9KOK-ga0c88dnYMsAoifW2NJTd_Y8",
+            authDomain: "paramount-school-d55bc.firebaseapp.com",
+            databaseURL: "https://paramount-school-d55bc-default-rtdb.firebaseio.com",
+            projectId: "paramount-school-d55bc",
+            storageBucket: "paramount-school-d55bc.firebasestorage.app",
+            messagingSenderId: "130979432562",
+            appId: "1:130979432562:web:4cd94787b23f9daba51aeb"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Teacher Data Mapping
+        const classData = {
+            "Pre-KG": { name: "Ms. Sarah", room: "Room A-101", desig: "Head Teacher", sub: "Early Years" },
+            "Grade 1": { name: "Mr. David", room: "Room B-202", desig: "Class Mentor", sub: "English/Social" },
+            "Grade 2": { name: "Ms. Nirmala", room: "Room C-303", desig: "Senior Faculty", sub: "Mathematics" },
+            // Add other grades here manually following the pattern above...
+        };
+
+        function updateTeacherDetails() {
+            const selectedClass = document.getElementById('childClass').value;
+            const infoDiv = document.getElementById('teacherInfo');
+            const preview = document.getElementById('assignmentPreview');
+            
+            if (classData[selectedClass]) {
+                const data = classData[selectedClass];
+                infoDiv.innerHTML = `
+                    <div style="font-family: 'Cinzel'; font-size: 1rem; color: #fff;">${data.name}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8; margin: 4px 0;">${data.desig} • ${data.sub}</div>
+                    <div style="font-size: 0.9rem; color: var(--gold); font-weight: 600;"><i class="fas fa-door-open"></i> ${data.room}</div>
+                `;
+                preview.style.display = 'block';
+            }
+        }
+
+        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const selectedClass = document.getElementById('childClass').value;
+            
+            const formData = {
+                parentName: document.getElementById('parentName').value,
+                phone: document.getElementById('phone').value,
+                primaryClass: selectedClass,
+                children: document.getElementById('childrenDetails').value,
+                assignedTeacher: classData[selectedClass].name,
+                assignedRoom: classData[selectedClass].room,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection("event_registrations").add(formData);
+                
+                // Premium Success State
+                document.getElementById('mainContainer').innerHTML = `
+                    <div style="text-align:center; animation: slideUp 0.6s ease;">
+                        <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--gold); margin-bottom: 20px;"></i>
+                        <h2 style="color:#fff;">Registration Confirmed</h2>
+                        <div style="margin: 25px 0; padding: 20px; border: 1px solid rgba(197,160,89,0.3); border-radius:15px; background: rgba(197,160,89,0.05);">
+                            <p style="font-size: 0.8rem; letter-spacing: 1px; color: var(--gold);">ENTRY PASS FOR</p>
+                            <p style="font-size: 1.2rem; margin: 10px 0;">${formData.parentName}</p>
+                            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                            <p style="font-size: 0.9rem; opacity: 0.9;">Please proceed to:</p>
+                            <p style="font-size: 1.1rem; color: var(--gold); font-weight: bold; margin-top: 5px;">${formData.assignedRoom}</p>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">Teacher: ${formData.assignedTeacher}</p>
+                        </div>
+                        <p style="font-size: 0.7rem; opacity: 0.6;">Please show this screen at the reception desk.</p>
+                        <button onclick="location.reload()" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:10px 30px; border-radius:50px; margin-top:30px; cursor:pointer;">Done</button>
+                    </div>
+                `;
+            } catch (err) {
+                alert("Submission failed. Please check your internet.");
+            }
+        });
+
+        // Admin Auth Check
+        if (new URLSearchParams(window.location.search).get('admin') === 'true') {
+            document.getElementById('adminLink').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
