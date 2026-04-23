@@ -47,9 +47,8 @@
         .admin-table th { background: var(--space-dark); color: var(--gold); padding: 12px; text-align: left; font-family: 'Cinzel'; border: 1px solid #334155; font-size: 0.75rem; }
         .admin-table td { padding: 12px; border: 1px solid #e2e8f0; font-size: 0.8rem; vertical-align: top; }
         
-        .visited-row { background-color: #f0fdf4 !important; }
+        .visited-row { background-color: #f0fdf4 !important; color: #166534; }
         
-        /* Teacher Info Box */
         .staff-chip {
             background: #fffbeb;
             border-left: 3px solid var(--gold);
@@ -60,7 +59,6 @@
             color: #92400e;
         }
 
-        /* Timeline Styles */
         .time-box { line-height: 1.4; }
         .time-label { display: block; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
         .reg-time { color: #475569; margin-bottom: 8px; }
@@ -91,7 +89,7 @@
         </div>
 
         <h2 style="font-family: 'Cinzel'; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; color: #333; font-size: 1.2rem;">
-            PTM Registration & Meeting Directory - 2026
+            Guest Registration & Attendance List - 2026
         </h2>
 
         <table class="admin-table">
@@ -101,8 +99,8 @@
                     <th>Parent Name</th>
                     <th>Contact</th>
                     <th>Children & Grade</th>
-                    <th>Assigned Teacher & Venue</th>
-                    <th>Registration Timeline</th>
+                    <th>Teacher & Venue</th>
+                    <th>Timeline</th>
                     <th style="width: 100px;">Actions</th>
                 </tr>
             </thead>
@@ -114,7 +112,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // --- Staff Mapping Directory (Preventing "undefined" errors) ---
         const staffDir = {
             "Pre-KG (Diamond)": { t: "Ms. Sarah", r: "Room A-101" },
             "KG-1 (Ruby)": { t: "Ms. Aruna", r: "Room A-102" },
@@ -156,8 +153,6 @@
                     if (val.students) {
                         val.students.forEach(s => {
                             childrenHtml += `<div style="margin-bottom:8px;">• <b>${s.name}</b><br><span style="font-size:0.7rem; color:#64748b;">${s.grade}</span></div>`;
-                            
-                            // Prevent "undefined" by looking up the directory if teacher info is missing in DB
                             const info = staffDir[s.grade] || { t: "Not Assigned", r: "N/A" };
                             teacherHtml += `
                                 <div class="staff-chip">
@@ -167,22 +162,11 @@
                         });
                     }
 
-                    // Timeline Building
                     let timelineHtml = `
                         <div class="time-box">
-                            <div class="reg-time">
-                                <span class="time-label">First Registered</span>
-                                ${val.timestamp || 'N/A'}
-                            </div>`;
-                    
-                    if (val.updateTimestamp) {
-                        timelineHtml += `
-                            <div class="upd-time">
-                                <span class="time-label">Last Updated</span>
-                                ${val.updateTimestamp}
-                            </div>`;
-                    }
-                    timelineHtml += `</div>`;
+                            <div class="reg-time"><span class="time-label">Registered</span>${val.timestamp || 'N/A'}</div>
+                            ${val.updateTimestamp ? `<div class="upd-time"><span class="time-label">Updated</span>${val.updateTimestamp}</div>` : ''}
+                        </div>`;
 
                     tableBody.innerHTML += `
                         <tr class="${val.visited ? 'visited-row' : ''}">
@@ -195,21 +179,90 @@
                             <td>${teacherHtml}</td>
                             <td>${timelineHtml}</td>
                             <td>
-                                <button onclick="deleteRecord('${key}')" style="background:none; border:none; color:#dc2626; cursor:pointer; font-size:1rem;"><i class="fas fa-trash-alt"></i></button>
-                                <a href="https://wa.me/${val.phone.replace(/\D/g,'')}" target="_blank" style="margin-left:8px; color:#25D366;"><i class="fab fa-whatsapp"></i></a>
+                                <button onclick="deleteRecord('${key}')" style="background:none; border:none; color:#dc2626; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                                <button onclick="sendWA('${val.phone}', '${val.parentName}', '${key}')" style="background:none; border:none; color:#25D366; cursor:pointer; margin-left:10px;">
+                                    <i class="fab fa-whatsapp" style="font-size:1.2rem;"></i>
+                                </button>
                             </td>
                         </tr>`;
                 });
             });
         }
 
+async function sendWA(phone, parent, key) {
+    try {
+        const snapshot = await db.ref('ptm_registrations/' + key).once('value');
+        const data = snapshot.val();
+        const hasVisited = data ? data.visited : false;
+
+        let msg = "";
+
+        if (hasVisited) {
+            // --- ATTENDED MESSAGE (Checked) ---
+            let attendanceList = "";
+            if (data.students && data.students.length > 0) {
+                data.students.forEach((s) => {
+                    const info = staffDir[s.grade] || { t: "[Teacher Name]", r: "[Room No]" };
+                    attendanceList += `\n- ${s.name} (Grade: ${s.grade}) and met ${info.t}`;
+                });
+            }
+
+            msg = `Dear Parent,
+
+Thank you for attending the PTM 2026. We are glad that you visited and met the scheduled staff:
+${attendanceList}
+
+We hope the interaction helped you understand the academic standards and overall progress of your child. Your involvement plays an important role in your child’s learning journey.
+
+If you would like to know more details about your child’s progress or need any further clarification, please feel free to contact us at +91 9652188807.
+
+Thank you for your continued support.
+
+Regards,
+Paramount School Admin
+Email: paramount0707@gmail.com`;
+
+        } else {
+            // --- MISSED MESSAGE (Unchecked) ---
+            let missedList = "";
+            if (data.students && data.students.length > 0) {
+                data.students.forEach((s) => {
+                    const info = staffDir[s.grade] || { t: "[Teacher Name]", r: "[Room No]" };
+                    missedList += `\n- ${s.name} (Grade: ${s.grade}) with ${info.t} in ${info.r}`;
+                });
+            }
+
+            msg = `Dear Parent,
+
+As you have registered for the PTM 2026, the room and teacher were allotted to you. However, unfortunately, you were unable to meet the allotted staff:
+${missedList}
+
+It was mandatory to meet the teacher to understand the academic standards and overall progress of your child.
+
+If you would like to know more details about your child’s progress, please feel free to contact us at +91 9652188807.
+
+Thank you.
+Regards,
+Paramount School Admin
+Email: paramount0707@gmail.com`;
+        }
+
+        const encodedMsg = encodeURIComponent(msg);
+        const cleanPhone = phone.replace(/\D/g, '');
+        window.open(`https://wa.me/${cleanPhone}?text=${encodedMsg}`, '_blank');
+        
+    } catch (error) {
+        console.error("WhatsApp Error:", error);
+        alert("Error fetching parent data. Please try again.");
+    }
+}
         function toggleVisit(key, status) { db.ref('ptm_registrations/' + key).update({ visited: status }); }
         function deleteRecord(key) { if (confirm("Delete this entry?")) db.ref('ptm_registrations/' + key).remove(); }
         function wipeAllData() { if (prompt("Type 'WIPE' to delete all data:") === "WIPE") db.ref('ptm_registrations').remove(); }
 
         function exportToExcel() {
             let table = document.querySelector(".admin-table");
-            let wb = XLSX.utils.table_to_book(table, { sheet: "Registrations" });
+            let wb = XLSX.utils.table_to_book(table, { sheet: "Attendance" });
             XLSX.writeFile(wb, "Paramount_PTM_Registrations_2026.xlsx");
         }
 
