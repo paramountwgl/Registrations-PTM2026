@@ -4,46 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Registration | Paramount School</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;500;600&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Great+Vibes&family=Montserrat:wght@200;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="School logo 2.png">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --gold: #c5a059; --navy: #030a1a; }
-        body { 
-            background: radial-gradient(circle at center, #1e293b 0%, #030a1a 100%);
-            color: white; font-family: 'Montserrat', sans-serif;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+        :root { --gold: #c5a059; --navy: #030a1a; --white: #f4f4f4; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--navy);
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; font-family: 'Montserrat', sans-serif;
+            background-image: radial-gradient(circle at center, #1e293b 0%, #030a1a 100%);
         }
 
-        .reg-card {
-            width: 100%; max-width: 550px;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(197, 160, 89, 0.3);
-            border-radius: 20px; padding: 40px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        .invitation-frame {
+            width: 92%; max-width: 850px; height: 85vh;
+            border: 2px solid var(--gold); position: relative;
+            background: rgba(3, 10, 26, 0.6); backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); display: flex; flex-direction: column;
         }
 
-        h2 { font-family: 'Cinzel', serif; color: var(--gold); text-align: center; margin-bottom: 10px; letter-spacing: 2px; }
-        .subtitle { text-align: center; font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 30px; opacity: 0.7; text-transform: uppercase; }
+        .scroll-content {
+            flex: 1; overflow-y: auto; padding: 40px 20px; text-align: center;
+            scrollbar-width: thin; scrollbar-color: var(--gold) transparent;
+        }
 
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 8px; }
+        .scroll-content::-webkit-scrollbar { width: 4px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+        .school-logo { height: 80px; margin-bottom: 20px; }
+        .school-name { font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: 4px; color: var(--gold); margin-bottom: 10px; }
         
-        input, select, textarea {
+        .event-title { font-family: 'Cinzel', serif; font-size: clamp(1.2rem, 4vw, 2rem); color: #fff; margin: 10px 0; letter-spacing: 2px; }
+
+        /* Countdown wrapper from Invitation */
+        .countdown-wrapper { display: flex; justify-content: center; gap: 10px; margin: 25px 0; }
+        .count-unit { background: rgba(197, 160, 89, 0.05); border: 1px solid rgba(197, 160, 89, 0.3); padding: 10px; min-width: 60px; border-radius: 5px; }
+        .count-unit span { display: block; font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); font-weight: 700; }
+        .count-unit label { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
+
+        /* Form Styling */
+        #registrationForm { max-width: 500px; margin: 0 auto; text-align: left; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 5px; }
+        input, select {
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(197, 160, 89, 0.2);
             padding: 12px; border-radius: 8px; color: white; outline: none; font-family: inherit;
         }
-        input:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); }
-
-        /* Dynamic Teacher Card */
-        #assignmentPreview {
-            display: none; background: linear-gradient(45deg, rgba(197, 160, 89, 0.1), transparent);
-            border: 1px solid rgba(197, 160, 89, 0.3); padding: 20px; margin-bottom: 25px; border-radius: 12px;
-            animation: slideUp 0.5s ease;
+        
+        .child-entry-card {
+            background: rgba(197, 160, 89, 0.05); border: 1px solid rgba(197, 160, 89, 0.2);
+            padding: 15px; border-radius: 10px; margin-bottom: 15px; animation: slideUp 0.4s ease;
         }
 
         .submit-btn {
@@ -52,148 +69,198 @@
         }
         .submit-btn:hover { background: white; box-shadow: 0 0 20px rgba(197, 160, 89, 0.4); }
 
-        #adminLink {
-            display: none; position: fixed; bottom: 20px; right: 20px;
-            background: rgba(255,255,255,0.1); color: white; padding: 10px 20px;
-            border-radius: 50px; text-decoration: none; font-size: 0.7rem; border: 1px solid var(--gold);
-        }
+        /* Pass/Table View */
+        .pass-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem; }
+        .pass-table th { color: var(--gold); border-bottom: 1px solid var(--gold); padding: 10px; text-align: left; }
+        .pass-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; color: #fff; }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .footer-inner { margin-top: 50px; padding-bottom: 20px; text-align: center; }
+        .connect-text { font-family: 'Cinzel', serif; color: #fff; font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; margin: 20px 0 10px; }
+        .social-links { display: flex; justify-content: center; gap: 20px; }
+        .social-links a { color: var(--gold); font-size: 1.2rem; transition: 0.3s; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div class="reg-card" id="mainContainer">
-        <h2>Event Registration</h2>
-        <p class="subtitle">Paramount English Medium School</p>
-        
-        <form id="registrationForm">
-            <div class="input-group">
-                <label>Parent Name</label>
-                <input type="text" id="parentName" required placeholder="Enter full name">
+    <div class="invitation-frame">
+        <div class="scroll-content" id="mainContainer">
+            
+            <img src="School logo 2.png" alt="Logo" class="school-logo">
+            <h2 class="school-name">Paramount English Medium School</h2>
+            <h1 class="event-title">EVENT REGISTRATION 2026</h1>
+
+            <div class="countdown-wrapper">
+                <div class="count-unit"><span id="days">00</span><label>Days</label></div>
+                <div class="count-unit"><span id="hours">00</span><label>Hrs</label></div>
+                <div class="count-unit"><span id="mins">00</span><label>Min</label></div>
+                <div class="count-unit"><span id="secs">00</span><label>Sec</label></div>
             </div>
 
-            <div class="input-group">
-                <label>Phone Number</label>
-                <input type="tel" id="phone" required placeholder="Enter mobile number">
-            </div>
+            <form id="registrationForm">
+                <div class="input-group">
+                    <label>Parent Name</label>
+                    <input type="text" id="parentName" required placeholder="Enter full name">
+                </div>
 
-            <div class="input-group">
-                <label>Select Primary Class</label>
-                <select id="childClass" onchange="updateTeacherDetails()" required>
-                    <option value="" disabled selected>Select Class</option>
-                    <option value="Pre-KG">Pre-KG</option>
-                    <option value="LKG">LKG</option>
-                    <option value="UKG">UKG</option>
-                    <option value="Grade 1">Grade 1</option>
-                    <option value="Grade 2">Grade 2</option>
-                    <option value="Grade 3">Grade 3</option>
-                    <option value="Grade 4">Grade 4</option>
-                    <option value="Grade 5">Grade 5</option>
-                    <option value="Grade 6">Grade 6</option>
-                    <option value="Grade 7">Grade 7</option>
-                    <option value="Grade 8">Grade 8</option>
-                </select>
-            </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="phone" required placeholder="Enter mobile number">
+                </div>
 
-            <div id="assignmentPreview">
-                <p style="font-size: 0.6rem; color: var(--gold); margin-bottom: 8px; font-weight: bold;">DIRECTED TO:</p>
-                <div id="teacherInfo"></div>
-            </div>
+                <div class="input-group">
+                    <label>How many children are studying here?</label>
+                    <select id="childCount" onchange="updateChildFields()">
+                        <option value="1">1 Child</option>
+                        <option value="2">2 Children</option>
+                        <option value="3">3 Children</option>
+                        <option value="4">4 Children</option>
+                    </select>
+                </div>
 
-            <div class="input-group">
-                <label>Children Names & Grades</label>
-                <textarea id="childrenDetails" rows="2" placeholder="Ex: Rahul (Grade 5), Sneha (Grade 2)" required></textarea>
-            </div>
+                <div id="childrenContainer">
+                    </div>
 
-            <button type="submit" class="submit-btn">CONFIRM REGISTRATION</button>
-        </form>
+                <button type="submit" class="submit-btn">CONFIRM REGISTRATION</button>
+            </form>
+
+            <div class="footer-inner">
+                <p style="font-size: 0.6rem; opacity: 0.8; letter-spacing: 2px; color: #fff;">PARAMOUNT SCHOOL • WARANGAL</p>
+                <h3 class="connect-text">Connect with us</h3>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/paramountschoolwgl" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.instagram.com/paramount.07" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://youtube.com/@paramountschoolwgl" target="_blank"><i class="fab fa-youtube"></i></a>
+                    <a href="https://wa.me/919000641355" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                </div>
+                <p style="font-size: 0.5rem; opacity: 0.6; margin-top: 20px; color: #fff;">© 2026 Paramount School. All Rights Reserved.</p>
+            </div>
+        </div>
     </div>
 
-    <a href="admin-panel.html" id="adminLink"><i class="fas fa-user-shield"></i> ADMIN PANNEL</a>
-
     <script>
-        // Your Firebase Config
+        // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyDRYk9KOK-ga0c88dnYMsAoifW2NJTd_Y8",
             authDomain: "paramount-school-d55bc.firebaseapp.com",
-            databaseURL: "https://paramount-school-d55bc-default-rtdb.firebaseio.com",
             projectId: "paramount-school-d55bc",
             storageBucket: "paramount-school-d55bc.firebasestorage.app",
             messagingSenderId: "130979432562",
             appId: "1:130979432562:web:4cd94787b23f9daba51aeb"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Teacher Data Mapping
+        // --- Teacher/Room Mapping ---
         const classData = {
-            "Pre-KG": { name: "Ms. Sarah", room: "Room A-101", desig: "Head Teacher", sub: "Early Years" },
-            "Grade 1": { name: "Mr. David", room: "Room B-202", desig: "Class Mentor", sub: "English/Social" },
-            "Grade 2": { name: "Ms. Nirmala", room: "Room C-303", desig: "Senior Faculty", sub: "Mathematics" },
-            // Add other grades here manually following the pattern above...
+            "Pre-KG": { teacher: "Ms. Sarah", room: "Room A-101" },
+            "LKG": { teacher: "Ms. Aruna", room: "Room A-102" },
+            "UKG": { teacher: "Ms. Lakshmi", room: "Room A-103" },
+            "Grade 1": { teacher: "Mr. David", room: "Room B-202" },
+            "Grade 2": { teacher: "Ms. Nirmala", room: "Room C-303" },
+            "Grade 3": { teacher: "Mr. Satish", room: "Room C-304" },
+            "Grade 4": { teacher: "Ms. Swapna", room: "Room D-401" },
+            "Grade 5": { teacher: "Mr. Kiran", room: "Room D-402" },
+            "Grade 6": { teacher: "Ms. Fatima", room: "Lab 1" },
+            "Grade 7": { teacher: "Mr. Ravi", room: "Lab 2" },
+            "Grade 8": { teacher: "Ms. Mary", room: "Library Hall" }
         };
 
-        function updateTeacherDetails() {
-            const selectedClass = document.getElementById('childClass').value;
-            const infoDiv = document.getElementById('teacherInfo');
-            const preview = document.getElementById('assignmentPreview');
-            
-            if (classData[selectedClass]) {
-                const data = classData[selectedClass];
-                infoDiv.innerHTML = `
-                    <div style="font-family: 'Cinzel'; font-size: 1rem; color: #fff;">${data.name}</div>
-                    <div style="font-size: 0.8rem; opacity: 0.8; margin: 4px 0;">${data.desig} • ${data.sub}</div>
-                    <div style="font-size: 0.9rem; color: var(--gold); font-weight: 600;"><i class="fas fa-door-open"></i> ${data.room}</div>
+        // --- Dynamic Form Logic ---
+        function updateChildFields() {
+            const count = document.getElementById('childCount').value;
+            const container = document.getElementById('childrenContainer');
+            container.innerHTML = '';
+
+            for(let i=1; i<=count; i++) {
+                container.innerHTML += `
+                    <div class="child-entry-card">
+                        <label style="color:white; opacity:0.5; margin-bottom:10px;">Child ${i}</label>
+                        <div class="input-group">
+                            <input type="text" class="child-name" placeholder="Child's Name" required>
+                        </div>
+                        <div class="input-group">
+                            <select class="child-grade" required>
+                                <option value="" disabled selected>Select Grade</option>
+                                ${Object.keys(classData).map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
                 `;
-                preview.style.display = 'block';
             }
         }
+        updateChildFields(); // Initialize with 1
 
+        // --- Countdown Logic ---
+        const targetDate = new Date("April 30, 2026 09:30:00").getTime();
+        setInterval(() => {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+            if (diff > 0) {
+                document.getElementById("days").innerText = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+                document.getElementById("hours").innerText = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                document.getElementById("mins").innerText = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                document.getElementById("secs").innerText = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+            }
+        }, 1000);
+
+        // --- Submission Logic ---
         document.getElementById('registrationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const selectedClass = document.getElementById('childClass').value;
+            const parentName = document.getElementById('parentName').value;
+            const phone = document.getElementById('phone').value;
+            const names = document.querySelectorAll('.child-name');
+            const grades = document.querySelectorAll('.child-grade');
             
-            const formData = {
-                parentName: document.getElementById('parentName').value,
-                phone: document.getElementById('phone').value,
-                primaryClass: selectedClass,
-                children: document.getElementById('childrenDetails').value,
-                assignedTeacher: classData[selectedClass].name,
-                assignedRoom: classData[selectedClass].room,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            let students = [];
+            let tableRows = '';
+
+            names.forEach((el, index) => {
+                const grade = grades[index].value;
+                const info = classData[grade];
+                students.push({ name: el.value, grade: grade });
+                tableRows += `
+                    <tr>
+                        <td><b>${el.value}</b><br><small>${grade}</small></td>
+                        <td>${info.teacher}</td>
+                        <td style="color:var(--gold)">${info.room}</td>
+                    </tr>
+                `;
+            });
 
             try {
-                await db.collection("event_registrations").add(formData);
-                
-                // Premium Success State
+                await db.collection("event_registrations").add({
+                    parentName, phone, students,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Transform Form into "Digital Pass"
                 document.getElementById('mainContainer').innerHTML = `
-                    <div style="text-align:center; animation: slideUp 0.6s ease;">
-                        <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--gold); margin-bottom: 20px;"></i>
-                        <h2 style="color:#fff;">Registration Confirmed</h2>
-                        <div style="margin: 25px 0; padding: 20px; border: 1px solid rgba(197,160,89,0.3); border-radius:15px; background: rgba(197,160,89,0.05);">
-                            <p style="font-size: 0.8rem; letter-spacing: 1px; color: var(--gold);">ENTRY PASS FOR</p>
-                            <p style="font-size: 1.2rem; margin: 10px 0;">${formData.parentName}</p>
-                            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
-                            <p style="font-size: 0.9rem; opacity: 0.9;">Please proceed to:</p>
-                            <p style="font-size: 1.1rem; color: var(--gold); font-weight: bold; margin-top: 5px;">${formData.assignedRoom}</p>
-                            <p style="font-size: 0.8rem; opacity: 0.7;">Teacher: ${formData.assignedTeacher}</p>
+                    <div style="animation: slideUp 0.6s ease;">
+                        <i class="fas fa-check-circle" style="font-size: 3.5rem; color: var(--gold); margin-bottom: 20px;"></i>
+                        <h2 style="color:#fff;">Registration Successful</h2>
+                        <p style="font-size:0.7rem; letter-spacing:2px; margin-bottom:20px;">WELCOME, ${parentName.toUpperCase()}</p>
+                        
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--gold); border-radius:15px; padding:15px; margin-bottom:30px;">
+                            <p style="font-size:0.6rem; color:var(--gold); letter-spacing:2px; font-weight:bold;">MEETING SCHEDULE</p>
+                            <table class="pass-table">
+                                <thead>
+                                    <tr><th>Student</th><th>Teacher</th><th>Venue</th></tr>
+                                </thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
                         </div>
-                        <p style="font-size: 0.7rem; opacity: 0.6;">Please show this screen at the reception desk.</p>
-                        <button onclick="location.reload()" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:10px 30px; border-radius:50px; margin-top:30px; cursor:pointer;">Done</button>
+
+                        <p style="font-size:0.7rem; opacity:0.8; line-height:1.6;">Please show this digital pass at the reception desk on<br><b>April 30, 2026.</b></p>
+                        
+                        <button onclick="window.print()" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:10px 25px; border-radius:50px; margin-top:30px; cursor:pointer; font-size:0.7rem;">PRINT PASS</button>
                     </div>
                 `;
             } catch (err) {
-                alert("Submission failed. Please check your internet.");
+                alert("Submission failed. Check your connection.");
             }
         });
-
-        // Admin Auth Check
-        if (new URLSearchParams(window.location.search).get('admin') === 'true') {
-            document.getElementById('adminLink').style.display = 'block';
-        }
     </script>
 </body>
 </html>
