@@ -18,8 +18,7 @@
             font-family: 'Poppins', sans-serif; 
             background-color: var(--space-dark); 
             background-image: radial-gradient(circle at center, #1e293b 0%, #030a1a 100%);
-            color: white; 
-            min-height: 100vh;
+            color: white; min-height: 100vh;
         }
 
         header { 
@@ -32,8 +31,8 @@
         .name-main { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); font-weight: 900; }
 
         .admin-container { 
-            width: 95%; max-width: 1400px; margin: 40px auto; 
-            background: white; color: #333; padding: 25px; 
+            width: 98%; max-width: 1600px; margin: 20px auto; 
+            background: white; color: #333; padding: 20px; 
             border-radius: 15px; box-shadow: 0 0 40px rgba(0,0,0,0.5); 
             overflow-x: auto; 
         }
@@ -44,19 +43,33 @@
         .excel-btn { background: #107c10; color: white; }
         .print-btn { background: #1e293b; color: var(--gold); border: 1px solid var(--gold); }
 
-        .admin-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        .admin-table th { background: var(--space-dark); color: var(--gold); padding: 15px; text-align: left; font-family: 'Cinzel'; border: 1px solid #334155; }
-        .admin-table td { padding: 12px 15px; border: 1px solid #e2e8f0; font-size: 0.85rem; vertical-align: top; }
+        .admin-table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+        .admin-table th { background: var(--space-dark); color: var(--gold); padding: 12px; text-align: left; font-family: 'Cinzel'; border: 1px solid #334155; font-size: 0.75rem; }
+        .admin-table td { padding: 12px; border: 1px solid #e2e8f0; font-size: 0.8rem; vertical-align: top; }
         
-        .visited-row { background-color: #f0fdf4 !important; color: #166534; }
-        .student-chip { display: block; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; margin-bottom: 5px; border-left: 3px solid var(--gold); font-size: 0.8rem; }
+        .visited-row { background-color: #f0fdf4 !important; }
+        
+        /* Teacher Info Box */
+        .staff-chip {
+            background: #fffbeb;
+            border-left: 3px solid var(--gold);
+            padding: 6px 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #92400e;
+        }
+
+        /* Timeline Styles */
+        .time-box { line-height: 1.4; }
+        .time-label { display: block; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
+        .reg-time { color: #475569; margin-bottom: 8px; }
+        .upd-time { color: #0284c7; padding-top: 4px; border-top: 1px dashed #e2e8f0; }
 
         @media print {
             header, .admin-actions { display: none !important; }
             body { background: white !important; color: black !important; }
             .admin-container { box-shadow: none !important; width: 100% !important; margin: 0 !important; }
-            .admin-table th { background: #eee !important; color: black !important; border: 1px solid black !important; }
-            .admin-table td { border: 1px solid black !important; color: black !important; }
         }
     </style>
 </head>
@@ -67,7 +80,7 @@
             <img src="School logo 2.png" alt="Logo" class="logo-img">
             <div class="name-main">PARAMOUNT ADMIN PANEL</div>
         </div>
-        <div style="color: var(--gold); font-weight: bold;"><i class="fas fa-shield-alt"></i> SECURE DASHBOARD</div>
+        <div style="color: var(--gold); font-weight: bold;"><i class="fas fa-shield-alt"></i> SECURE ACCESS</div>
     </header>
 
     <div class="admin-container">
@@ -77,23 +90,23 @@
             <button class="btn print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Report</button>
         </div>
 
-        <h2 style="font-family: 'Cinzel'; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; color: #333;">
-            Guest Registration List - 2026
+        <h2 style="font-family: 'Cinzel'; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; color: #333; font-size: 1.2rem;">
+            PTM Registration & Meeting Directory - 2026
         </h2>
 
         <table class="admin-table">
             <thead>
                 <tr>
                     <th style="width: 50px;">Visit</th>
-                    <th>Parent / Guardian</th>
+                    <th>Parent Name</th>
                     <th>Contact</th>
-                    <th>Children & Assigned Teachers</th>
-                    <th>Reg. Date</th>
+                    <th>Children & Grade</th>
+                    <th>Assigned Teacher & Venue</th>
+                    <th>Registration Timeline</th>
                     <th style="width: 100px;">Actions</th>
                 </tr>
             </thead>
-            <tbody id="adminTableBody">
-                </tbody>
+            <tbody id="adminTableBody"></tbody>
         </table>
     </div>
 
@@ -101,6 +114,21 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
+        // --- Staff Mapping Directory (Preventing "undefined" errors) ---
+        const staffDir = {
+            "Pre-KG (Diamond)": { t: "Ms. Sarah", r: "Room A-101" },
+            "KG-1 (Ruby)": { t: "Ms. Aruna", r: "Room A-102" },
+            "KG-2 (Amber)": { t: "Ms. Lakshmi", r: "Room A-103" },
+            "Grade-1 (Opal)": { t: "Mr. David", r: "Room B-202" },
+            "Grade-2 (Emerald)": { t: "Ms. Nirmala", r: "Room C-303" },
+            "Grade-3 (Crystal)": { t: "Mr. Satish", r: "Room C-304" },
+            "Grade-4 (Citrine)": { t: "Ms. Swapna", r: "Room D-401" },
+            "Grade-5 (Moonstone)": { t: "Mr. Kiran", r: "Room D-402" },
+            "Grade-6 (Alluri)": { t: "Ms. Fatima", r: "Science Lab" },
+            "Grade-7 (Kalam)": { t: "Mr. Ravi", r: "Computer Lab" },
+            "Grade-8 (Bhagat)": { t: "Ms. Mary", r: "Library Hall" }
+        };
+
         const firebaseConfig = {
             apiKey: "AIzaSyDRYk9KOK-ga0c88dnYMsAoifW2NJTd_Y8",
             authDomain: "paramount-school-d55bc.firebaseapp.com",
@@ -113,76 +141,78 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Load Data from Firebase
         function loadData() {
             db.ref('ptm_registrations').on('value', (snapshot) => {
                 const tableBody = document.getElementById('adminTableBody');
                 tableBody.innerHTML = "";
                 
                 snapshot.forEach((child) => {
-                    const data = child.val();
+                    const val = child.val();
                     const key = child.key;
-                    const rowClass = data.visited ? 'visited-row' : '';
 
-                    // Format Children & Teachers List
-                    let studentsHtml = "";
-                    if (data.students) {
-                        data.students.forEach(s => {
-                            studentsHtml += `
-                                <div class="student-chip">
-                                    <b>${s.name}</b> (${s.grade}) <br>
-                                    <small><i class="fas fa-user-tie"></i> ${s.teacher || 'N/A'} | <i class="fas fa-door-open"></i> ${s.room || 'N/A'}</small>
+                    let childrenHtml = "";
+                    let teacherHtml = "";
+
+                    if (val.students) {
+                        val.students.forEach(s => {
+                            childrenHtml += `<div style="margin-bottom:8px;">• <b>${s.name}</b><br><span style="font-size:0.7rem; color:#64748b;">${s.grade}</span></div>`;
+                            
+                            // Prevent "undefined" by looking up the directory if teacher info is missing in DB
+                            const info = staffDir[s.grade] || { t: "Not Assigned", r: "N/A" };
+                            teacherHtml += `
+                                <div class="staff-chip">
+                                    <i class="fas fa-user-tie"></i> ${info.t} <br>
+                                    <i class="fas fa-door-open"></i> ${info.r}
                                 </div>`;
                         });
                     }
 
+                    // Timeline Building
+                    let timelineHtml = `
+                        <div class="time-box">
+                            <div class="reg-time">
+                                <span class="time-label">First Registered</span>
+                                ${val.timestamp || 'N/A'}
+                            </div>`;
+                    
+                    if (val.updateTimestamp) {
+                        timelineHtml += `
+                            <div class="upd-time">
+                                <span class="time-label">Last Updated</span>
+                                ${val.updateTimestamp}
+                            </div>`;
+                    }
+                    timelineHtml += `</div>`;
+
                     tableBody.innerHTML += `
-                        <tr class="${rowClass}">
+                        <tr class="${val.visited ? 'visited-row' : ''}">
                             <td style="text-align:center;">
-                                <input type="checkbox" ${data.visited ? 'checked' : ''} 
-                                onclick="toggleVisit('${key}', this.checked)" style="transform:scale(1.5);">
+                                <input type="checkbox" ${val.visited ? 'checked' : ''} onclick="toggleVisit('${key}', this.checked)" style="transform:scale(1.4);">
                             </td>
-                            <td><b>${data.parentName}</b></td>
-                            <td>${data.phone}</td>
-                            <td>${studentsHtml}</td>
-                            <td><small>${data.timestamp || 'N/A'}</small></td>
+                            <td><b>${val.parentName}</b></td>
+                            <td>${val.phone}</td>
+                            <td>${childrenHtml}</td>
+                            <td>${teacherHtml}</td>
+                            <td>${timelineHtml}</td>
                             <td>
-                                <button onclick="deleteRecord('${key}')" style="background:none; border:none; color:#dc2626; cursor:pointer; font-size:1.1rem;">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                                <a href="https://wa.me/${data.phone.replace(/\D/g,'')}" target="_blank" style="margin-left:10px; color:#25D366;">
-                                    <i class="fab fa-whatsapp"></i>
-                                </a>
+                                <button onclick="deleteRecord('${key}')" style="background:none; border:none; color:#dc2626; cursor:pointer; font-size:1rem;"><i class="fas fa-trash-alt"></i></button>
+                                <a href="https://wa.me/${val.phone.replace(/\D/g,'')}" target="_blank" style="margin-left:8px; color:#25D366;"><i class="fab fa-whatsapp"></i></a>
                             </td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
             });
         }
 
-        function toggleVisit(key, status) {
-            db.ref('ptm_registrations/' + key).update({ visited: status });
-        }
-
-        function deleteRecord(key) {
-            if (confirm("Delete this registration permanently?")) {
-                db.ref('ptm_registrations/' + key).remove();
-            }
-        }
-
-        function wipeAllData() {
-            if (prompt("Type 'WIPE' to delete ALL registrations:") === "WIPE") {
-                db.ref('ptm_registrations').remove();
-            }
-        }
+        function toggleVisit(key, status) { db.ref('ptm_registrations/' + key).update({ visited: status }); }
+        function deleteRecord(key) { if (confirm("Delete this entry?")) db.ref('ptm_registrations/' + key).remove(); }
+        function wipeAllData() { if (prompt("Type 'WIPE' to delete all data:") === "WIPE") db.ref('ptm_registrations').remove(); }
 
         function exportToExcel() {
             let table = document.querySelector(".admin-table");
-            let wb = XLSX.utils.table_to_book(table, { sheet: "Guests 2026" });
-            XLSX.writeFile(wb, "Paramount_Guest_List_2026.xlsx");
+            let wb = XLSX.utils.table_to_book(table, { sheet: "Registrations" });
+            XLSX.writeFile(wb, "Paramount_PTM_Registrations_2026.xlsx");
         }
 
-        // Initialize
         loadData();
     </script>
 </body>
