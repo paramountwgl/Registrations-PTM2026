@@ -84,183 +84,146 @@
 </head>
 <body>
 
-    <div class="invitation-frame">
-        <div class="scroll-content" id="mainContainer">
+  <div class="scroll-content" id="scrollArea">
+    <img src="School logo 2.png" alt="Logo" class="school-logo">
+    <h2 class="school-name">Paramount English Medium School</h2>
+    <h1 class="event-title">EVENT REGISTRATION 2026</h1>
+
+    <div class="countdown-wrapper">
+        <div class="count-unit"><span id="days">00</span><label>Days</label></div>
+        <div class="count-unit"><span id="hours">00</span><label>Hrs</label></div>
+        <div class="count-unit"><span id="mins">00</span><label>Min</label></div>
+        <div class="count-unit"><span id="secs">00</span><label>Sec</label></div>
+    </div>
+
+    <form id="registrationForm">
+        <div class="input-group">
+            <label>Parent Name</label>
+            <input type="text" id="parentName" required placeholder="Enter full name">
+        </div>
+
+        <div class="input-group">
+            <label>Phone Number</label>
+            <input type="tel" id="phone" required placeholder="Enter mobile number">
+        </div>
+
+        <div class="input-group">
+            <label>How many children are studying here?</label>
+            <select id="childCount" onchange="updateChildFields()">
+                <option value="1">1 Child</option>
+                <option value="2">2 Children</option>
+                <option value="3">3 Children</option>
+                <option value="4">4 Children</option>
+            </select>
+        </div>
+
+        <div id="childrenContainer"></div>
+
+        <button type="submit" id="submitBtn" class="submit-btn">CONFIRM REGISTRATION</button>
+    </form>
+
+    <div id="successPopup" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3,10,26,0.95); z-index: 1000; padding: 20px; align-items: center; justify-content: center;">
+        <div class="child-entry-card" style="max-width: 500px; width: 100%; text-align: center; border: 2px solid var(--gold); background: var(--navy);">
+            <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--gold); margin-bottom: 15px;"></i>
+            <h2 style="color:white; margin-bottom: 10px;">Registration Successful!</h2>
+            <p style="font-size: 0.8rem; color: var(--gold); letter-spacing: 2px; margin-bottom: 20px;">YOUR ENTRY PASS</p>
             
-            <img src="School logo 2.png" alt="Logo" class="school-logo">
-            <h2 class="school-name">Paramount English Medium School</h2>
-            <h1 class="event-title">EVENT REGISTRATION 2026</h1>
-
-            <div class="countdown-wrapper">
-                <div class="count-unit"><span id="days">00</span><label>Days</label></div>
-                <div class="count-unit"><span id="hours">00</span><label>Hrs</label></div>
-                <div class="count-unit"><span id="mins">00</span><label>Min</label></div>
-                <div class="count-unit"><span id="secs">00</span><label>Sec</label></div>
-            </div>
-
-            <form id="registrationForm">
-                <div class="input-group">
-                    <label>Parent Name</label>
-                    <input type="text" id="parentName" required placeholder="Enter full name">
-                </div>
-
-                <div class="input-group">
-                    <label>Phone Number</label>
-                    <input type="tel" id="phone" required placeholder="Enter mobile number">
-                </div>
-
-                <div class="input-group">
-                    <label>How many children are studying here?</label>
-                    <select id="childCount" onchange="updateChildFields()">
-                        <option value="1">1 Child</option>
-                        <option value="2">2 Children</option>
-                        <option value="3">3 Children</option>
-                        <option value="4">4 Children</option>
-                    </select>
-                </div>
-
-                <div id="childrenContainer">
-                    </div>
-
-                <button type="submit" class="submit-btn">CONFIRM REGISTRATION</button>
-            </form>
-
-            <div class="footer-inner">
-                <p style="font-size: 0.6rem; opacity: 0.8; letter-spacing: 2px; color: #fff;">PARAMOUNT SCHOOL • WARANGAL</p>
-                <h3 class="connect-text">Connect with us</h3>
-                <div class="social-links">
-                    <a href="https://www.facebook.com/paramountschoolwgl" target="_blank"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://www.instagram.com/paramount.07" target="_blank"><i class="fab fa-instagram"></i></a>
-                    <a href="https://youtube.com/@paramountschoolwgl" target="_blank"><i class="fab fa-youtube"></i></a>
-                    <a href="https://wa.me/919000641355" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                </div>
-                <p style="font-size: 0.5rem; opacity: 0.6; margin-top: 20px; color: #fff;">© 2026 Paramount School. All Rights Reserved.</p>
-            </div>
+            <div id="passDetails" style="text-align: left; margin-bottom: 20px;"></div>
+            
+            <button onclick="location.reload()" class="submit-btn" style="background: transparent; border: 1px solid var(--gold); color: var(--gold);">CLOSE & RESET</button>
         </div>
     </div>
 
-    <script>
-        // --- Firebase Configuration ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDRYk9KOK-ga0c88dnYMsAoifW2NJTd_Y8",
-            authDomain: "paramount-school-d55bc.firebaseapp.com",
-            projectId: "paramount-school-d55bc",
-            storageBucket: "paramount-school-d55bc.firebasestorage.app",
-            messagingSenderId: "130979432562",
-            appId: "1:130979432562:web:4cd94787b23f9daba51aeb"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    </div>
 
-        // --- Teacher/Room Mapping ---
-        const classData = {
-            "Pre-KG": { teacher: "Ms. Sarah", room: "Room A-101" },
-            "LKG": { teacher: "Ms. Aruna", room: "Room A-102" },
-            "UKG": { teacher: "Ms. Lakshmi", room: "Room A-103" },
-            "Grade 1": { teacher: "Mr. David", room: "Room B-202" },
-            "Grade 2": { teacher: "Ms. Nirmala", room: "Room C-303" },
-            "Grade 3": { teacher: "Mr. Satish", room: "Room C-304" },
-            "Grade 4": { teacher: "Ms. Swapna", room: "Room D-401" },
-            "Grade 5": { teacher: "Mr. Kiran", room: "Room D-402" },
-            "Grade 6": { teacher: "Ms. Fatima", room: "Lab 1" },
-            "Grade 7": { teacher: "Mr. Ravi", room: "Lab 2" },
-            "Grade 8": { teacher: "Ms. Mary", room: "Library Hall" }
-        };
+<script>
+    // --- Teacher/Room Mapping ---
+    const classData = {
+        "Pre-KG": { teacher: "Ms. Sarah", room: "Room A-101" },
+        "LKG": { teacher: "Ms. Aruna", room: "Room A-102" },
+        "UKG": { teacher: "Ms. Lakshmi", room: "Room A-103" },
+        "Grade 1": { teacher: "Mr. David", room: "Room B-202" },
+        "Grade 2": { teacher: "Ms. Nirmala", room: "Room C-303" },
+        "Grade 3": { teacher: "Mr. Satish", room: "Room C-304" },
+        "Grade 4": { teacher: "Ms. Swapna", room: "Room D-401" },
+        "Grade 5": { teacher: "Mr. Kiran", room: "Room D-402" },
+        "Grade 6": { teacher: "Ms. Fatima", room: "Lab 1" },
+        "Grade 7": { teacher: "Mr. Ravi", room: "Lab 2" },
+        "Grade 8": { teacher: "Ms. Mary", room: "Library Hall" }
+    };
 
-        // --- Dynamic Form Logic ---
-        function updateChildFields() {
-            const count = document.getElementById('childCount').value;
-            const container = document.getElementById('childrenContainer');
-            container.innerHTML = '';
-
-            for(let i=1; i<=count; i++) {
-                container.innerHTML += `
-                    <div class="child-entry-card">
-                        <label style="color:white; opacity:0.5; margin-bottom:10px;">Child ${i}</label>
-                        <div class="input-group">
-                            <input type="text" class="child-name" placeholder="Child's Name" required>
-                        </div>
-                        <div class="input-group">
-                            <select class="child-grade" required>
-                                <option value="" disabled selected>Select Grade</option>
-                                ${Object.keys(classData).map(grade => `<option value="${grade}">${grade}</option>`).join('')}
-                            </select>
-                        </div>
+    function updateChildFields() {
+        const count = document.getElementById('childCount').value;
+        const container = document.getElementById('childrenContainer');
+        container.innerHTML = '';
+        for(let i=1; i<=count; i++) {
+            container.innerHTML += `
+                <div class="child-entry-card">
+                    <label style="color:white; opacity:0.5; margin-bottom:10px;">Child ${i} Details</label>
+                    <div class="input-group">
+                        <input type="text" class="child-name" placeholder="Child's Name" required>
                     </div>
-                `;
-            }
+                    <div class="input-group">
+                        <select class="child-grade" required>
+                            <option value="" disabled selected>Select Grade</option>
+                            ${Object.keys(classData).map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>`;
         }
-        updateChildFields(); // Initialize with 1
+    }
+    updateChildFields();
 
-        // --- Countdown Logic ---
-        const targetDate = new Date("April 30, 2026 09:30:00").getTime();
-        setInterval(() => {
-            const now = new Date().getTime();
-            const diff = targetDate - now;
-            if (diff > 0) {
-                document.getElementById("days").innerText = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
-                document.getElementById("hours").innerText = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
-                document.getElementById("mins").innerText = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-                document.getElementById("secs").innerText = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
-            }
-        }, 1000);
+    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = "PROCESSING...";
+        btn.disabled = true;
 
-        // --- Submission Logic ---
-        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const parentName = document.getElementById('parentName').value;
-            const phone = document.getElementById('phone').value;
-            const names = document.querySelectorAll('.child-name');
-            const grades = document.querySelectorAll('.child-grade');
-            
-            let students = [];
-            let tableRows = '';
+        const parentName = document.getElementById('parentName').value;
+        const names = document.querySelectorAll('.child-name');
+        const grades = document.querySelectorAll('.child-grade');
+        
+        let students = [];
+        let detailsHtml = `<p style='font-size:0.9rem; margin-bottom:15px;'>Parent: <b>${parentName}</b></p>`;
+        detailsHtml += `<table style='width:100%; border-collapse:collapse; font-size:0.8rem;'>
+                        <tr style='color:var(--gold); border-bottom:1px solid var(--gold);'>
+                            <th style='padding:5px; text-align:left;'>Student</th>
+                            <th style='padding:5px; text-align:left;'>Teacher</th>
+                            <th style='padding:5px; text-align:left;'>Room</th>
+                        </tr>`;
 
-            names.forEach((el, index) => {
-                const grade = grades[index].value;
-                const info = classData[grade];
-                students.push({ name: el.value, grade: grade });
-                tableRows += `
-                    <tr>
-                        <td><b>${el.value}</b><br><small>${grade}</small></td>
-                        <td>${info.teacher}</td>
-                        <td style="color:var(--gold)">${info.room}</td>
-                    </tr>
-                `;
+        names.forEach((el, index) => {
+            const grade = grades[index].value;
+            const info = classData[grade];
+            students.push({ name: el.value, grade: grade });
+            detailsHtml += `
+                <tr style='border-bottom:1px solid rgba(255,255,255,0.1);'>
+                    <td style='padding:8px 5px;'>${el.value}<br><small>${grade}</small></td>
+                    <td style='padding:8px 5px;'>${info.teacher}</td>
+                    <td style='padding:8px 5px; color:var(--gold);'>${info.room}</td>
+                </tr>`;
+        });
+        detailsHtml += `</table>`;
+
+        try {
+            // Your existing Firebase call
+            await db.collection("event_registrations").add({
+                parentName,
+                phone: document.getElementById('phone').value,
+                students,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            try {
-                await db.collection("event_registrations").add({
-                    parentName, phone, students,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Transform Form into "Digital Pass"
-                document.getElementById('mainContainer').innerHTML = `
-                    <div style="animation: slideUp 0.6s ease;">
-                        <i class="fas fa-check-circle" style="font-size: 3.5rem; color: var(--gold); margin-bottom: 20px;"></i>
-                        <h2 style="color:#fff;">Registration Successful</h2>
-                        <p style="font-size:0.7rem; letter-spacing:2px; margin-bottom:20px;">WELCOME, ${parentName.toUpperCase()}</p>
-                        
-                        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--gold); border-radius:15px; padding:15px; margin-bottom:30px;">
-                            <p style="font-size:0.6rem; color:var(--gold); letter-spacing:2px; font-weight:bold;">MEETING SCHEDULE</p>
-                            <table class="pass-table">
-                                <thead>
-                                    <tr><th>Student</th><th>Teacher</th><th>Venue</th></tr>
-                                </thead>
-                                <tbody>${tableRows}</tbody>
-                            </table>
-                        </div>
-
-                        <p style="font-size:0.7rem; opacity:0.8; line-height:1.6;">Please show this digital pass at the reception desk on<br><b>April 30, 2026.</b></p>
-                        
-                        <button onclick="window.print()" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:10px 25px; border-radius:50px; margin-top:30px; cursor:pointer; font-size:0.7rem;">PRINT PASS</button>
-                    </div>
-                `;
-            } catch (err) {
-                alert("Submission failed. Check your connection.");
-            }
-        });
-    </script>
+            // Show Popup
+            document.getElementById('passDetails').innerHTML = detailsHtml;
+            document.getElementById('successPopup').style.display = 'flex';
+        } catch (err) {
+            alert("Error saving registration. Please check internet.");
+            btn.innerHTML = "CONFIRM REGISTRATION";
+            btn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
