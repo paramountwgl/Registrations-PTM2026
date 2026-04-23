@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Paramount Registration 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="icon" type="image/png" href="School logo 2.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root { --gold: #c5a059; --space-dark: #030a1a; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: var(--space-dark); 
+            background-image: radial-gradient(circle at center, #1e293b 0%, #030a1a 100%);
+            color: white; 
+            min-height: 100vh;
+        }
+
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 5%; background: rgba(2, 6, 23, 0.9); 
+            border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
+        }
+        .logo-container { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 50px; }
+        .name-main { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); font-weight: 900; }
+
+        .admin-container { 
+            width: 95%; max-width: 1400px; margin: 40px auto; 
+            background: white; color: #333; padding: 25px; 
+            border-radius: 15px; box-shadow: 0 0 40px rgba(0,0,0,0.5); 
+            overflow-x: auto; 
+        }
+
+        .admin-actions { display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end; }
+        .btn { padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; transition: 0.3s; }
+        .wipe-btn { background: #dc2626; color: white; }
+        .excel-btn { background: #107c10; color: white; }
+        .print-btn { background: #1e293b; color: var(--gold); border: 1px solid var(--gold); }
+
+        .admin-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        .admin-table th { background: var(--space-dark); color: var(--gold); padding: 15px; text-align: left; font-family: 'Cinzel'; border: 1px solid #334155; }
+        .admin-table td { padding: 12px 15px; border: 1px solid #e2e8f0; font-size: 0.85rem; vertical-align: top; }
+        
+        .visited-row { background-color: #f0fdf4 !important; color: #166534; }
+        .student-chip { display: block; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; margin-bottom: 5px; border-left: 3px solid var(--gold); font-size: 0.8rem; }
+
+        @media print {
+            header, .admin-actions { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .admin-container { box-shadow: none !important; width: 100% !important; margin: 0 !important; }
+            .admin-table th { background: #eee !important; color: black !important; border: 1px solid black !important; }
+            .admin-table td { border: 1px solid black !important; color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <img src="School logo 2.png" alt="Logo" class="logo-img">
+            <div class="name-main">PARAMOUNT ADMIN PANEL</div>
+        </div>
+        <div style="color: var(--gold); font-weight: bold;"><i class="fas fa-shield-alt"></i> SECURE DASHBOARD</div>
+    </header>
+
+    <div class="admin-container">
+        <div class="admin-actions">
+            <button class="btn wipe-btn" onclick="wipeAllData()"><i class="fas fa-trash"></i> Wipe All</button>
+            <button class="btn excel-btn" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Export Excel</button>
+            <button class="btn print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Report</button>
+        </div>
+
+        <h2 style="font-family: 'Cinzel'; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; color: #333;">
+            Guest Registration List - 2026
+        </h2>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">Visit</th>
+                    <th>Parent / Guardian</th>
+                    <th>Contact</th>
+                    <th>Children & Assigned Teachers</th>
+                    <th>Reg. Date</th>
+                    <th style="width: 100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="adminTableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRYk9KOK-ga0c88dnYMsAoifW2NJTd_Y8",
+            authDomain: "paramount-school-d55bc.firebaseapp.com",
+            databaseURL: "https://paramount-school-d55bc-default-rtdb.firebaseio.com",
+            projectId: "paramount-school-d55bc",
+            storageBucket: "paramount-school-d55bc.firebasestorage.app",
+            messagingSenderId: "130979432562",
+            appId: "1:130979432562:web:4cd94787b23f9daba51aeb"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Load Data from Firebase
+        function loadData() {
+            db.ref('ptm_registrations').on('value', (snapshot) => {
+                const tableBody = document.getElementById('adminTableBody');
+                tableBody.innerHTML = "";
+                
+                snapshot.forEach((child) => {
+                    const data = child.val();
+                    const key = child.key;
+                    const rowClass = data.visited ? 'visited-row' : '';
+
+                    // Format Children & Teachers List
+                    let studentsHtml = "";
+                    if (data.students) {
+                        data.students.forEach(s => {
+                            studentsHtml += `
+                                <div class="student-chip">
+                                    <b>${s.name}</b> (${s.grade}) <br>
+                                    <small><i class="fas fa-user-tie"></i> ${s.teacher || 'N/A'} | <i class="fas fa-door-open"></i> ${s.room || 'N/A'}</small>
+                                </div>`;
+                        });
+                    }
+
+                    tableBody.innerHTML += `
+                        <tr class="${rowClass}">
+                            <td style="text-align:center;">
+                                <input type="checkbox" ${data.visited ? 'checked' : ''} 
+                                onclick="toggleVisit('${key}', this.checked)" style="transform:scale(1.5);">
+                            </td>
+                            <td><b>${data.parentName}</b></td>
+                            <td>${data.phone}</td>
+                            <td>${studentsHtml}</td>
+                            <td><small>${data.timestamp || 'N/A'}</small></td>
+                            <td>
+                                <button onclick="deleteRecord('${key}')" style="background:none; border:none; color:#dc2626; cursor:pointer; font-size:1.1rem;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <a href="https://wa.me/${data.phone.replace(/\D/g,'')}" target="_blank" style="margin-left:10px; color:#25D366;">
+                                    <i class="fab fa-whatsapp"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function toggleVisit(key, status) {
+            db.ref('ptm_registrations/' + key).update({ visited: status });
+        }
+
+        function deleteRecord(key) {
+            if (confirm("Delete this registration permanently?")) {
+                db.ref('ptm_registrations/' + key).remove();
+            }
+        }
+
+        function wipeAllData() {
+            if (prompt("Type 'WIPE' to delete ALL registrations:") === "WIPE") {
+                db.ref('ptm_registrations').remove();
+            }
+        }
+
+        function exportToExcel() {
+            let table = document.querySelector(".admin-table");
+            let wb = XLSX.utils.table_to_book(table, { sheet: "Guests 2026" });
+            XLSX.writeFile(wb, "Paramount_Guest_List_2026.xlsx");
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>
