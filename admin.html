@@ -258,7 +258,7 @@ Email: paramount0707@gmail.com`;
 }
         function toggleVisit(key, status) { db.ref('ptm_registrations/' + key).update({ visited: status }); }
         function deleteRecord(key) { if (confirm("Delete this entry?")) db.ref('ptm_registrations/' + key).remove(); }
-        function wipeAllData() { if (prompt("Type 'WIPE' to delete all data:") === "WIPE") db.ref('ptm_registrations').remove(); }
+        function wipeAllData() { if (prompt("Type 'Password' to delete all data:") === "PTM2026") db.ref('ptm_registrations').remove(); }
 
         function exportToExcel() {
             let table = document.querySelector(".admin-table");
