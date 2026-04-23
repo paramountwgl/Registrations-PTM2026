@@ -3,227 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest Registration | Paramount School</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Great+Vibes&family=Montserrat:wght@200;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>PTM 2026 | Paramount English Medium School</title>
     <link rel="icon" type="image/png" href="School logo 2.png">
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        :root { --gold: #c5a059; --navy: #030a1a; --white: #f4f4f4; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        :root { --header-bg: #030a1a; --gold: #c5a059; --white: #ffffff; --light-bg: #f8f9fa; }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            background-color: var(--navy);
-            height: 100vh; display: flex; align-items: center; justify-content: center;
-            overflow: hidden; font-family: 'Montserrat', sans-serif;
-            background-image: radial-gradient(circle at center, #1e293b 0%, #030a1a 100%);
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--header-bg);
+            background-image: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        .invitation-frame {
-            width: 92%; max-width: 850px; height: 85vh;
-            border: 2px solid var(--gold); position: relative;
-            background: rgba(3, 10, 26, 0.6); backdrop-filter: blur(10px);
-            box-shadow: 0 0 50px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+        /* --- Header Styles --- */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 5%; background: rgba(2, 6, 23, 0.9); 
+            backdrop-filter: blur(10px); border-bottom: 2px solid var(--gold); 
+            position: sticky; top: 0; z-index: 1000; 
         }
+        .logo-container { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 50px; }
+        .name-main { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold); font-weight: 900; }
+        .name-sub { font-size: 0.7rem; letter-spacing: 2px; }
 
-        .scroll-content {
-            flex: 1; overflow-y: auto; padding: 40px 20px; text-align: center;
-            scrollbar-width: thin; scrollbar-color: var(--gold) transparent;
+        /* --- Form Container --- */
+        .registration-section { padding: 60px 5%; flex: 1; }
+        .form-container { 
+            max-width: 600px; margin: 0 auto; background: white; 
+            color: #333; padding: 30px; border-radius: 20px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
         }
-
-        .scroll-content::-webkit-scrollbar { width: 4px; }
-        .scroll-content::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-
-        .school-logo { height: 80px; margin-bottom: 20px; }
-        .school-name { font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: 4px; color: var(--gold); margin-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; color: #334155; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; }
         
-        .event-title { font-family: 'Cinzel', serif; font-size: clamp(1.2rem, 4vw, 2rem); color: #fff; margin: 10px 0; letter-spacing: 2px; }
-
-        /* Countdown wrapper from Invitation */
-        .countdown-wrapper { display: flex; justify-content: center; gap: 10px; margin: 25px 0; }
-        .count-unit { background: rgba(197, 160, 89, 0.05); border: 1px solid rgba(197, 160, 89, 0.3); padding: 10px; min-width: 60px; border-radius: 5px; }
-        .count-unit span { display: block; font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); font-weight: 700; }
-        .count-unit label { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
-
-        /* Form Styling */
-        #registrationForm { max-width: 500px; margin: 0 auto; text-align: left; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 5px; }
-        input, select {
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(197, 160, 89, 0.2);
-            padding: 12px; border-radius: 8px; color: white; outline: none; font-family: inherit;
-        }
-        
-        .child-entry-card {
-            background: rgba(197, 160, 89, 0.05); border: 1px solid rgba(197, 160, 89, 0.2);
-            padding: 15px; border-radius: 10px; margin-bottom: 15px; animation: slideUp 0.4s ease;
+        .child-entry { 
+            background: #f8fafc; padding: 15px; border-radius: 12px; 
+            border-top: 3px solid var(--gold); margin-bottom: 15px; 
         }
 
-        .submit-btn {
-            width: 100%; padding: 16px; background: var(--gold); border: none; border-radius: 50px;
-            color: var(--navy); font-weight: 700; cursor: pointer; transition: 0.4s; letter-spacing: 2px; margin-top: 10px;
+        .submit-btn { 
+            background: var(--header-bg); color: var(--gold); border: 2px solid var(--gold); 
+            padding: 15px; width: 100%; border-radius: 50px; font-weight: bold; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 1px;
         }
-        .submit-btn:hover { background: white; box-shadow: 0 0 20px rgba(197, 160, 89, 0.4); }
+        .submit-btn:hover { background: var(--gold); color: black; }
 
-        /* Pass/Table View */
-        .pass-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem; }
-        .pass-table th { color: var(--gold); border-bottom: 1px solid var(--gold); padding: 10px; text-align: left; }
-        .pass-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; color: #fff; }
+        /* --- Success Popup / Modal --- */
+        #successModal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; padding: 20px; 
+        }
+        .modal-content { 
+            background: white; color: #333; padding: 30px; border-radius: 20px; 
+            width: 100%; max-width: 500px; text-align: center; border: 3px solid var(--gold);
+        }
+        .pass-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.85rem; }
+        .pass-table th { background: #f1f5f9; padding: 10px; border-bottom: 2px solid var(--gold); text-align: left; }
+        .pass-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
 
-        .footer-inner { margin-top: 50px; padding-bottom: 20px; text-align: center; }
-        .connect-text { font-family: 'Cinzel', serif; color: #fff; font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; margin: 20px 0 10px; }
-        .social-links { display: flex; justify-content: center; gap: 20px; }
-        .social-links a { color: var(--gold); font-size: 1.2rem; transition: 0.3s; }
-
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- Footer --- */
+        footer { 
+            background-color: var(--header-bg); padding: 40px 20px; 
+            text-align: center; border-top: 2px solid var(--gold); margin-top: auto;
+        }
+        .social-icons a { color: white; font-size: 24px; margin: 0 12px; transition: 0.3s; }
+        .social-icons a:hover { color: var(--gold); }
+        .connect-text { font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 20px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-  <div class="scroll-content" id="scrollArea">
-    <img src="School logo 2.png" alt="Logo" class="school-logo">
-    <h2 class="school-name">Paramount English Medium School</h2>
-    <h1 class="event-title">EVENT REGISTRATION 2026</h1>
-
-    <div class="countdown-wrapper">
-        <div class="count-unit"><span id="days">00</span><label>Days</label></div>
-        <div class="count-unit"><span id="hours">00</span><label>Hrs</label></div>
-        <div class="count-unit"><span id="mins">00</span><label>Min</label></div>
-        <div class="count-unit"><span id="secs">00</span><label>Sec</label></div>
-    </div>
-
-    <form id="registrationForm">
-        <div class="input-group">
-            <label>Parent Name</label>
-            <input type="text" id="parentName" required placeholder="Enter full name">
-        </div>
-
-        <div class="input-group">
-            <label>Phone Number</label>
-            <input type="tel" id="phone" required placeholder="Enter mobile number">
-        </div>
-
-        <div class="input-group">
-            <label>How many children are studying here?</label>
-            <select id="childCount" onchange="updateChildFields()">
-                <option value="1">1 Child</option>
-                <option value="2">2 Children</option>
-                <option value="3">3 Children</option>
-                <option value="4">4 Children</option>
-            </select>
-        </div>
-
-        <div id="childrenContainer"></div>
-
-        <button type="submit" id="submitBtn" class="submit-btn">CONFIRM REGISTRATION</button>
-    </form>
-
-    <div id="successPopup" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3,10,26,0.95); z-index: 1000; padding: 20px; align-items: center; justify-content: center;">
-        <div class="child-entry-card" style="max-width: 500px; width: 100%; text-align: center; border: 2px solid var(--gold); background: var(--navy);">
-            <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--gold); margin-bottom: 15px;"></i>
-            <h2 style="color:white; margin-bottom: 10px;">Registration Successful!</h2>
-            <p style="font-size: 0.8rem; color: var(--gold); letter-spacing: 2px; margin-bottom: 20px;">YOUR ENTRY PASS</p>
-            
-            <div id="passDetails" style="text-align: left; margin-bottom: 20px;"></div>
-            
-            <button onclick="location.reload()" class="submit-btn" style="background: transparent; border: 1px solid var(--gold); color: var(--gold);">CLOSE & RESET</button>
+<header>
+    <div class="logo-container">
+        <img src="School logo 2.png" alt="Logo" class="logo-img">
+        <div class="school-name-box">
+            <div class="name-main">PARAMOUNT</div>
+            <div class="name-sub">ENGLISH MEDIUM SCHOOL</div>
         </div>
     </div>
+</header>
 
+<section class="registration-section">
+    <div class="form-container">
+        <h2 style="font-family: 'Cinzel'; text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 25px;">Meeting Registration</h2>
+        
+        <form id="ptmForm">
+            <div class="form-group">
+                <label>Parent Name</label>
+                <input type="text" id="parentName" placeholder="Enter Full Name" required>
+            </div>
+
+            <div class="form-group">
+                <label>How many children are studying here?</label>
+                <select id="childCount" onchange="updateChildFields()" required>
+                    <option value="1">1 Child</option>
+                    <option value="2">2 Children</option>
+                    <option value="3">3 Children</option>
+                </select>
+            </div>
+
+            <div id="childrenContainer"></div>
+
+            <div class="form-group">
+                <label>WhatsApp Number</label>
+                <input type="tel" id="phoneNumber" placeholder="Enter Mobile Number" required>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn">CONFIRM REGISTRATION</button>
+        </form>
     </div>
+</section>
+
+<div id="successModal">
+    <div class="modal-content">
+        <div style="background: #28a745; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+            <i class="fas fa-check"></i>
+        </div>
+        <h2 style="font-family: 'Cinzel';">Registration Successful!</h2>
+        <p style="font-size: 0.8rem; letter-spacing: 1px; color: var(--gold); font-weight: bold; margin-top: 5px;">OFFICIAL MEETING PASS</p>
+        
+        <div id="meetingSchedule"></div>
+
+        <div style="background: #fffbeb; border: 1px dashed var(--gold); padding: 10px; margin: 15px 0; font-size: 0.8rem; font-weight: bold;">
+            <i class="fas fa-camera"></i> PLEASE TAKE A SCREENSHOT!
+        </div>
+        
+        <button class="submit-btn" onclick="location.reload()">Finish</button>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <p style="margin-bottom: 20px; font-size: 0.8rem; opacity: 0.8;">
+            &copy; 2026, Paramount English Medium School. All Rights Reserved.
+        </p>
+        <h3 class="connect-text">Connect with us</h3>
+        <div class="social-icons">
+            <a href="https://www.facebook.com/paramountschoolwgl" target="_blank"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/paramount.07" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://youtube.com/@paramountschoolwgl" target="_blank"><i class="fab fa-youtube"></i></a>
+            <a href="https://wa.me/919000641355" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        </div>
+    </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // --- Teacher/Room Mapping ---
-    const classData = {
-        "Pre-KG": { teacher: "Ms. Sarah", room: "Room A-101" },
-        "LKG": { teacher: "Ms. Aruna", room: "Room A-102" },
-        "UKG": { teacher: "Ms. Lakshmi", room: "Room A-103" },
-        "Grade 1": { teacher: "Mr. David", room: "Room B-202" },
-        "Grade 2": { teacher: "Ms. Nirmala", room: "Room C-303" },
-        "Grade 3": { teacher: "Mr. Satish", room: "Room C-304" },
-        "Grade 4": { teacher: "Ms. Swapna", room: "Room D-401" },
-        "Grade 5": { teacher: "Mr. Kiran", room: "Room D-402" },
-        "Grade 6": { teacher: "Ms. Fatima", room: "Lab 1" },
-        "Grade 7": { teacher: "Mr. Ravi", room: "Lab 2" },
-        "Grade 8": { teacher: "Ms. Mary", room: "Library Hall" }
+    // --- STAFF DATA ---
+    const staffDir = {
+        "Pre-KG (Diamond)": { teacher: "Ms. Sarah", room: "Room A-101" },
+        "KG-1 (Ruby)": { teacher: "Ms. Aruna", room: "Room A-102" },
+        "KG-2 (Amber)": { teacher: "Ms. Lakshmi", room: "Room A-103" },
+        "Grade-1 (Opal)": { teacher: "Mr. David", room: "Room B-202" },
+        "Grade-2 (Emerald)": { teacher: "Ms. Nirmala", room: "Room C-303" },
+        "Grade-3 (Crystal)": { teacher: "Mr. Satish", room: "Room C-304" },
+        "Grade-4 (Citrine)": { teacher: "Ms. Swapna", room: "Room D-401" },
+        "Grade-5 (Moonstone)": { teacher: "Mr. Kiran", room: "Room D-402" },
+        "Grade-6 (Alluri)": { teacher: "Ms. Fatima", room: "Science Lab" },
+        "Grade-7 (Kalam)": { teacher: "Mr. Ravi", room: "Computer Lab" },
+        "Grade-8 (Bhagat)": { teacher: "Ms. Mary", room: "Library Hall" }
     };
 
     function updateChildFields() {
         const count = document.getElementById('childCount').value;
         const container = document.getElementById('childrenContainer');
-        container.innerHTML = '';
-        for(let i=1; i<=count; i++) {
+        const options = Object.keys(staffDir).map(cls => `<option value="${cls}">${cls}</option>`).join('');
+        container.innerHTML = "";
+        for (let i = 1; i <= count; i++) {
             container.innerHTML += `
-                <div class="child-entry-card">
-                    <label style="color:white; opacity:0.5; margin-bottom:10px;">Child ${i} Details</label>
-                    <div class="input-group">
-                        <input type="text" class="child-name" placeholder="Child's Name" required>
-                    </div>
-                    <div class="input-group">
-                        <select class="child-grade" required>
-                            <option value="" disabled selected>Select Grade</option>
-                            ${Object.keys(classData).map(grade => `<option value="${grade}">${grade}</option>`).join('')}
-                        </select>
-                    </div>
+                <div class="child-entry">
+                    <label>Child ${i}: Name</label>
+                    <input type="text" class="child-name" required style="margin-bottom:10px;">
+                    <label>Child ${i}: Class</label>
+                    <select class="child-grade" required>${options}</select>
                 </div>`;
         }
     }
     updateChildFields();
 
-    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+    document.getElementById('ptmForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
-        btn.innerHTML = "PROCESSING...";
-        btn.disabled = true;
+        btn.disabled = true; btn.innerText = "Saving...";
 
-        const parentName = document.getElementById('parentName').value;
+        const parent = document.getElementById('parentName').value;
         const names = document.querySelectorAll('.child-name');
         const grades = document.querySelectorAll('.child-grade');
         
-        let students = [];
-        let detailsHtml = `<p style='font-size:0.9rem; margin-bottom:15px;'>Parent: <b>${parentName}</b></p>`;
-        detailsHtml += `<table style='width:100%; border-collapse:collapse; font-size:0.8rem;'>
-                        <tr style='color:var(--gold); border-bottom:1px solid var(--gold);'>
-                            <th style='padding:5px; text-align:left;'>Student</th>
-                            <th style='padding:5px; text-align:left;'>Teacher</th>
-                            <th style='padding:5px; text-align:left;'>Room</th>
-                        </tr>`;
-
-        names.forEach((el, index) => {
-            const grade = grades[index].value;
-            const info = classData[grade];
-            students.push({ name: el.value, grade: grade });
-            detailsHtml += `
-                <tr style='border-bottom:1px solid rgba(255,255,255,0.1);'>
-                    <td style='padding:8px 5px;'>${el.value}<br><small>${grade}</small></td>
-                    <td style='padding:8px 5px;'>${info.teacher}</td>
-                    <td style='padding:8px 5px; color:var(--gold);'>${info.room}</td>
-                </tr>`;
+        let rowsHtml = "";
+        names.forEach((input, i) => {
+            const grade = grades[i].value;
+            const info = staffDir[grade];
+            rowsHtml += `<tr><td><b>${input.value}</b><br>${grade}</td><td>${info.teacher}</td><td style="color:var(--gold); font-weight:bold;">${info.room}</td></tr>`;
         });
-        detailsHtml += `</table>`;
 
-        try {
-            // Your existing Firebase call
-            await db.collection("event_registrations").add({
-                parentName,
-                phone: document.getElementById('phone').value,
-                students,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+        const table = `<table class="pass-table"><thead><tr><th>Student</th><th>Teacher</th><th>Room</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 
-            // Show Popup
-            document.getElementById('passDetails').innerHTML = detailsHtml;
-            document.getElementById('successPopup').style.display = 'flex';
-        } catch (err) {
-            alert("Error saving registration. Please check internet.");
-            btn.innerHTML = "CONFIRM REGISTRATION";
-            btn.disabled = false;
-        }
+        // Success Simulation (Add your Firebase db.ref().set() logic here)
+        setTimeout(() => {
+            document.getElementById('meetingSchedule').innerHTML = table;
+            document.getElementById('successModal').style.display = 'flex';
+        }, 1000);
     });
 </script>
+
 </body>
 </html>
